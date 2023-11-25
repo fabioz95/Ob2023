@@ -1,10 +1,12 @@
 # Ob2023
 
-Obiettivo 2023 di Fabio Zuccaro utilizzo di vercel commerce
+Obiettivo 2023 di Fabio Zuccaro utilizzo di vercel commerce per il solo obiettivo (di studio).
 
 ## Spiegazione progetto (TODO)
 
 ## Running locally
+
+For problem write to f.zuccaro@reply.it (problemi with file in .git and error of symlink on install)
 
 You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js Commerce. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/concepts/projects/environment-variables) for this, but a `.env` file is all that is necessary.
 
@@ -15,8 +17,8 @@ You will need to use the environment variables [defined in `.env.example`](.env.
 3. Download your environment variables: `vercel env pull`
 
 ```bash
-pnpm install
-pnpm dev
+npm install
+npm dev
 ```
 
 Your app should now be running on [localhost:3000](http://localhost:3000/).
