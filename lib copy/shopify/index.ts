@@ -6,12 +6,8 @@ import {
   editCartItemsMutation,
   removeFromCartMutation
 } from './mutations/cart';
-//import { getCartQuery } from './queries/cart';
-import {
-  getCollectionProductsQuery,
-  getCollectionQuery
-  //getCollectionsQuery
-} from './queries/collection';
+import { getCartQuery } from './queries/cart';
+import { getCollectionProductsQuery } from './queries/collection';
 //import { getMenuQuery } from './queries/menu';
 import { getPageQuery, getPagesQuery } from './queries/page';
 import {
@@ -29,9 +25,8 @@ import {
   Product,
   ShopifyAddToCartOperation,
   ShopifyCart,
-  //ShopifyCartOperation,
+  ShopifyCartOperation,
   ShopifyCollection,
-  ShopifyCollectionOperation,
   ShopifyCollectionProductsOperation,
   //ShopifyCollectionsOperation,
   ShopifyCreateCartOperation,
@@ -248,21 +243,6 @@ export async function updateCart(
 }
 
 export async function getCart(cartId: string): Promise<Cart | undefined> {
-  console.log(cartId);
-  const cart: ShopifyCart = {
-    id: '1',
-    checkoutUrl: 'a',
-    cost: {
-      subtotalAmount: { amount: '1', currencyCode: 'USD' },
-      totalAmount: { amount: '1', currencyCode: 'USD' },
-      totalTaxAmount: { amount: '1', currencyCode: 'USD' }
-    },
-    lines: { edges: [] },
-    totalQuantity: 0
-  };
-
-  return reshapeCart(cart);
-  /*
   const res = await shopifyFetch<ShopifyCartOperation>({
     query: getCartQuery,
     variables: { cartId },
@@ -275,19 +255,6 @@ export async function getCart(cartId: string): Promise<Cart | undefined> {
   }
 
   return reshapeCart(res.body.data.cart);
-  */
-}
-
-export async function getCollection(handle: string): Promise<Collection | undefined> {
-  const res = await shopifyFetch<ShopifyCollectionOperation>({
-    query: getCollectionQuery,
-    tags: [TAGS.collections],
-    variables: {
-      handle
-    }
-  });
-
-  return reshapeCollection(res.body.data.collection);
 }
 
 export async function getCollectionProducts({

@@ -1,4 +1,10 @@
-import { CAROUSEL, SHOPIFY_GRAPHQL_API_ENDPOINT, THREE_ITEM_GRID } from 'lib/constants';
+import {
+  CAROUSEL,
+  SHOPIFY_GRAPHQL_API_ENDPOINT,
+  THREE_ITEM_GRID,
+  WCTOKEN,
+  WCTrustedToken
+} from 'lib/constants';
 import { isShopifyError } from 'lib/type-guards';
 import {
   createCartMutation,
@@ -10,6 +16,7 @@ import { getPagesQuery } from './queries/page';
 import {} from './queries/product';
 import {
   Cart,
+  CartItem,
   Collection,
   Connection,
   Menu,
@@ -22,6 +29,8 @@ import {
   ShopifyRemoveFromCartOperation,
   ShopifyUpdateCartOperation
 } from './types';
+
+//import { cookies } from 'next/headers';
 
 import { ApiRoutes } from 'lib/url-mapper';
 
@@ -90,9 +99,48 @@ const removeEdgesAndNodes = (array: Connection<any>) => {
   return array.edges.map((edge) => edge?.node);
 };
 
+// eslint-disable-next-line no-unused-vars
+const guestIdentity = async () => {
+  const auth = await fetch(ApiRoutes.GuestIdentity, {
+    headers: {
+      accept: 'application/json, text/plain, */*',
+      'content-type': 'application/json',
+      'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-ch-ua-platform': '"Windows"'
+    },
+    referrerPolicy: 'strict-origin-when-cross-origin',
+    body: '{}',
+    method: 'POST',
+    mode: 'cors',
+    credentials: 'omit'
+  })
+    .then((response) => response.json())
+    .then((json) => {
+      return json;
+    });
+  return auth;
+};
+
 const doApi = async (url: string) => {
   console.log(url);
   const response = await fetch(url)
+    .then((response) => response.json())
+    .then((json) => {
+      return json;
+    });
+
+  return response;
+};
+
+const doApiHeader = async (url: string) => {
+  // SAVE AUTH IN SOME VARIABLES
+  const response = await fetch(url, {
+    headers: {
+      wctoken: WCTOKEN,
+      wctrustedtoken: WCTrustedToken
+    }
+  })
     .then((response) => response.json())
     .then((json) => {
       return json;
@@ -269,7 +317,92 @@ export async function updateCart(
   return reshapeCart(res.body.data.cartLinesUpdate.cart);
 }
 
+export async function getProductCart(element: any) {
+  const productData = await doApi(ApiRoutes.ProductId.replace('##productId##', element.productId));
+
+  const item = productData?.contents[0];
+
+  const priceDisplay = item.price.find((el: any) => el.usage === 'Display');
+  const priceOffer = item.price.find((el: any) => el.usage === 'Offer');
+
+  return {
+    id: element.productId,
+    quantity: element.quantity,
+    cost: {
+      totalAmount: { amount: element.orderItemPrice, currencyCode: element.currency }
+    },
+    merchandise: {
+      id: '1',
+      title: '',
+      selectedOptions: [],
+      product: {
+        id: element.productId,
+        handle: element.productId,
+        availableForSale: true,
+        title: item.name,
+        description: item.shortDescription,
+        descriptionHtml: item.shortDescription,
+        options: [],
+        priceRange: {
+          maxVariantPrice: { amount: priceDisplay.value, currencyCode: priceDisplay.currency },
+          minVariantPrice: { amount: priceOffer.value, currencyCode: priceOffer.currency }
+        },
+        featuredImage: {
+          url: ApiRoutes.ForImage + item.thumbnail,
+          altText: 'immagine alter text',
+          width: 50,
+          height: 50
+        },
+        images: [
+          {
+            url: ApiRoutes.ForImage + item.thumbnail,
+            altText: 'Image alter text',
+            width: 50,
+            height: 50
+          }
+        ],
+        seo: {
+          title: item.name,
+          description: item.shortDescription
+        },
+        tags: [],
+        updatedAt: new Date().toISOString(),
+        variants: []
+      }
+    }
+  };
+}
+
 export async function getCart(cartId: string): Promise<Cart | undefined> {
+  console.log('cartId: ' + cartId);
+  const cart = await doApiHeader(ApiRoutes.Cart);
+
+  const product: CartItem[] = [];
+  //console.log(cart?.orderItem);
+
+  for (let i = 0; i < cart.orderItem.length; i++) {
+    const productData = await getProductCart(cart.orderItem[i]);
+
+    product.push(productData);
+  }
+
+  const cartResp: Cart = {
+    lines: product,
+    id: '1',
+    checkoutUrl: 'cart',
+    cost: {
+      subtotalAmount: { amount: cart?.grandTotal, currencyCode: cart?.grandTotalCurrency },
+      totalAmount: { amount: cart?.grandTotal, currencyCode: cart?.grandTotalCurrency },
+      totalTaxAmount: { amount: cart?.totalSalesTax, currencyCode: cart?.totalSalesTaxCurrency }
+    },
+    totalQuantity: 1
+  };
+
+  return cartResp;
+
+  //return reshapeCart(cartResp);
+
+  /*
   console.log(cartId);
   const cart: ShopifyCart = {
     id: '1',
