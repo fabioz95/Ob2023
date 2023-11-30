@@ -1,6 +1,6 @@
 import { GridTileImage } from 'components/grid/tile';
-import { getThreeItemProducts } from 'lib/shopify';
-import type { Product } from 'lib/shopify/types';
+import { getThreeItemProducts } from 'lib-hcl/hcl';
+import type { Product } from 'lib-hcl/hcl/types';
 import Link from 'next/link';
 
 function ThreeItemGridItem({ item, size }: { item: Product; size: 'full' | 'half' }) {

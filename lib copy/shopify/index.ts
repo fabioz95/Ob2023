@@ -1,5 +1,5 @@
-import { HIDDEN_PRODUCT_TAG, SHOPIFY_GRAPHQL_API_ENDPOINT, TAGS } from 'lib/constants';
-import { isShopifyError } from 'lib/type-guards';
+import { HIDDEN_PRODUCT_TAG, SHOPIFY_GRAPHQL_API_ENDPOINT, TAGS } from 'lib-hcl/constants';
+import { isShopifyError } from 'lib-hcl/type-guards';
 import {
   addToCartMutation,
   createCartMutation,

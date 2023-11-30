@@ -1,4 +1,4 @@
-import { getCarouselProduct } from 'lib/shopify';
+import { getCarouselProduct } from 'lib-hcl/hcl';
 import Link from 'next/link';
 import { GridTileImage } from './grid/tile';
 

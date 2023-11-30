@@ -6,9 +6,9 @@ import { GridTileImage } from 'components/grid/tile';
 import Footer from 'components/layout/footer';
 import { Gallery } from 'components/product/gallery';
 import { ProductDescription } from 'components/product/product-description';
-import { HIDDEN_PRODUCT_TAG } from 'lib/constants';
-import { getProduct, getProductRecommendations } from 'lib/shopify';
-import { Image } from 'lib/shopify/types';
+import { HIDDEN_PRODUCT_TAG } from 'lib-hcl/constants';
+import { getProduct, getProductRecommendations } from 'lib-hcl/hcl';
+import { Image } from 'lib-hcl/hcl/types';
 import Link from 'next/link';
 
 export const runtime = 'edge';

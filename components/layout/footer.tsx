@@ -3,7 +3,7 @@
 //import GitHubIcon from 'components/icons/github';
 //import FooterMenu from 'components/layout/footer-menu';
 //import LogoSquare from 'components/logo-square';
-//import { getMenu } from 'lib/shopify';
+//import { getMenu } from 'lib-hcl/hcl';
 //import { Suspense } from 'react';
 
 const { COMPANY_NAME, SITE_NAME } = process.env;

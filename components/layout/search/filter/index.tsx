@@ -1,4 +1,4 @@
-import { SortFilterItem } from 'lib/constants';
+import { SortFilterItem } from 'lib-hcl/constants';
 import FilterItemDropdown from './dropdown';
 import { FilterItem } from './item';
 

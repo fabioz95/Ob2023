@@ -4,6 +4,10 @@ Obiettivo 2023 di Fabio Zuccaro utilizzo di vercel commerce per il solo obiettiv
 
 ## Spiegazione progetto (TODO)
 
+## MOCK
+
+.env con MOCK=TRUE
+
 ## Running locally
 
 For problem write to f.zuccaro@reply.it (problemi with file in .git and error of symlink on install)

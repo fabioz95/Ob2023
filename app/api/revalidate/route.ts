@@ -1,4 +1,4 @@
-import { TAGS } from 'lib/constants';
+import { TAGS } from 'lib-hcl/constants';
 import { revalidateTag } from 'next/cache';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';

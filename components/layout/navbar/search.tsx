@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { createUrl } from 'lib/utils';
+import { createUrl } from 'lib-hcl/utils';
 
 export default function Search() {
   const router = useRouter();

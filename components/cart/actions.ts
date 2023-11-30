@@ -1,6 +1,6 @@
 'use server';
 
-import { addToCart, createCart, getCart, removeFromCart, updateCart } from 'lib/shopify';
+import { addToCart, createCart, getCart, removeFromCart, updateCart } from 'lib-hcl/hcl';
 import { cookies } from 'next/headers';
 
 export const addItem = async (variantId: string | undefined): Promise<Error | undefined> => {

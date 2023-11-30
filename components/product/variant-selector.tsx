@@ -1,8 +1,8 @@
 'use client';
 
 import clsx from 'clsx';
-import { ProductOption, ProductVariant } from 'lib/shopify/types';
-import { createUrl } from 'lib/utils';
+import { ProductOption, ProductVariant } from 'lib-hcl/hcl/types';
+import { createUrl } from 'lib-hcl/utils';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 

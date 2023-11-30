@@ -1,5 +1,5 @@
-import { CAROUSEL, THREE_ITEM_GRID, WCTOKEN, WCTrustedToken } from 'lib/constants';
-import { isShopifyError } from 'lib/type-guards';
+import { CAROUSEL, THREE_ITEM_GRID, WCTOKEN, WCTrustedToken } from 'lib-hcl/constants';
+import { isShopifyError } from 'lib-hcl/type-guards';
 import {
   addToCartMutation,
   createCartMutation,
@@ -26,7 +26,7 @@ import {
 
 //import { cookies } from 'next/headers';
 
-import { ApiRoutes } from 'lib/url-mapper';
+import { ApiRoutes } from 'lib-hcl/url-mapper';
 import {
   CartMock,
   CategoriesMock,

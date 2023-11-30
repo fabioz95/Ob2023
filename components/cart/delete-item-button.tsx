@@ -3,7 +3,7 @@ import LoadingDots from 'components/loading-dots';
 import { useRouter } from 'next/navigation';
 
 import clsx from 'clsx';
-import type { CartItem } from 'lib/shopify/types';
+import type { CartItem } from 'lib-hcl/hcl/types';
 import { useTransition } from 'react';
 import { removeItem } from './actions';
 
