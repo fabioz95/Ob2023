@@ -27,12 +27,24 @@ import {
 //import { cookies } from 'next/headers';
 
 import { ApiRoutes } from 'lib/url-mapper';
+import {
+  CartMock,
+  CategoriesMock,
+  ProductCarouselMock,
+  ProductIdMock,
+  ProductMock,
+  ProductSearchMock,
+  ProductThreeMock,
+  ProductsMock
+} from './mock-file';
 
 //const domain = `https://${process.env.SHOPIFY_STORE_DOMAIN!}`;
 //const endpoint = `${domain}${SHOPIFY_GRAPHQL_API_ENDPOINT}`;
 //const endpoint = 'https://commerce-preview.sbx0133.play.hclsofy.com'
 const endpoint = 'https://commerce-preview-graphql.sbx0133.play.hclsofy.com/graphql?';
 const key = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN!;
+
+const { MOCK } = process.env;
 
 type ExtractVariables<T> = T extends { variables: object } ? T['variables'] : never;
 
@@ -170,32 +182,71 @@ const guestIdentity = async () => {
   return auth;
 };
 
-const doApi = async (url: string) => {
-  //console.log(url);
-  const response = await fetch(url)
-    .then((response) => response.json())
-    .then((json) => {
-      return json;
-    });
-
-  return response;
+const mapperMock = (mockFile: string) => {
+  switch (mockFile) {
+    case 'Categories':
+      return CategoriesMock;
+    case 'Products':
+      return ProductsMock;
+    case 'Product':
+      return ProductMock;
+    case 'ProductThree':
+      return ProductThreeMock;
+    case 'ProductCarousel':
+      return ProductCarouselMock;
+    case 'ProductSearch':
+      return ProductSearchMock;
+    case 'ProductId':
+      return ProductIdMock;
+    case 'Cart':
+      return CartMock;
+    /*
+    case 'GuestIdentity':
+      return '';
+  */
+    default:
+      return '';
+  }
 };
 
-const doApiHeader = async (url: string) => {
-  // SAVE AUTH IN SOME VARIABLES
-  const response = await fetch(url, {
-    headers: {
-      wctoken: WCTOKEN,
-      wctrustedtoken: WCTrustedToken
-    },
-    cache: 'no-cache'
-  })
-    .then((response) => response.json())
-    .then((json) => {
-      return json;
-    });
+const doApi = async (url: string, mockString: string) => {
+  //console.log(url);
+  if (MOCK === 'TRUE') {
+    const response = mapperMock(mockString);
 
-  return response;
+    return response;
+  } else {
+    const response = await fetch(url)
+      .then((response) => response.json())
+      .then((json) => {
+        return json;
+      });
+
+    return response;
+  }
+};
+
+const doApiHeader = async (url: string, mockString: string) => {
+  // SAVE AUTH IN SOME VARIABLES
+  if (MOCK === 'TRUE') {
+    const response = mapperMock(mockString);
+
+    return response;
+  } else {
+    const response = await fetch(url, {
+      headers: {
+        wctoken: WCTOKEN,
+        wctrustedtoken: WCTrustedToken
+      },
+      cache: 'no-cache'
+    })
+      .then((response) => response.json())
+      .then((json) => {
+        return json;
+      });
+
+    return response;
+  }
 };
 
 const reshapeCart = (cart: ShopifyCart): Cart => {
@@ -275,7 +326,10 @@ export async function updateCart(
 }
 
 export async function getProductCart(element: any) {
-  const productData = await doApi(ApiRoutes.ProductId.replace('##productId##', element.productId));
+  const productData = await doApi(
+    ApiRoutes.ProductId.replace('##productId##', element.productId),
+    'ProductId'
+  );
 
   const item = productData?.contents[0];
 
@@ -331,7 +385,7 @@ export async function getProductCart(element: any) {
 }
 
 export async function getCart(cartId: string): Promise<Cart> {
-  const cart = await doApiHeader(ApiRoutes.Cart);
+  const cart = await doApiHeader(ApiRoutes.Cart, 'Cart');
   //console.log(cart);
 
   const product: CartItem[] = [];
@@ -401,7 +455,7 @@ export async function getCarouselProduct(): Promise<Product[]> {
   CAROUSEL.map((el: string) => {
     partNumber += '&partNumber=' + el;
   });
-  const productsData = await doApi(ApiRoutes.ProductCarousel + partNumber);
+  const productsData = await doApi(ApiRoutes.ProductCarousel + partNumber, 'ProductCarousel');
   const products: Product[] = [];
 
   if (productsData.contents) {
@@ -453,7 +507,8 @@ export async function getThreeItemProducts(): Promise<Product[]> {
   const productsData = await doApi(
     ApiRoutes.ProductThree.replace('##partNumber1##', THREE_ITEM_GRID[0] || '')
       .replace('##partNumber2##', THREE_ITEM_GRID[1] || '')
-      .replace('##partNumber3##', THREE_ITEM_GRID[2] || '')
+      .replace('##partNumber3##', THREE_ITEM_GRID[2] || ''),
+    'ProductThree'
   );
   const products: Product[] = [];
 
@@ -514,7 +569,8 @@ export async function getCollectionProducts({
   const orderBy = mapSort(sortKey || '', reverse || false);
 
   const productsData = await doApi(
-    ApiRoutes.Products.replace('##categoryId##', collection) + orderBy
+    ApiRoutes.Products.replace('##categoryId##', collection) + orderBy,
+    'Products'
   );
   const products: Product[] = [];
 
@@ -564,7 +620,7 @@ export async function getCollectionProducts({
 }
 
 export async function getCollections(): Promise<Collection[]> {
-  const menuData = await doApi(ApiRoutes.Categories);
+  const menuData = await doApi(ApiRoutes.Categories, 'Categories');
 
   const collection: Collection[] = [];
   if (menuData && menuData.contents && menuData.contents.length > 0) {
@@ -591,7 +647,7 @@ export async function getCollections(): Promise<Collection[]> {
 }
 
 export async function getMenu(): Promise<Menu[]> {
-  const menuData = await doApi(ApiRoutes.Categories);
+  const menuData = await doApi(ApiRoutes.Categories, 'Categories');
 
   const menu: Menu[] = [];
   if (menuData && menuData.contents && menuData.contents.length > 0) {
@@ -644,7 +700,7 @@ export async function getPages(): Promise<Page[]> {
 }
 
 export async function getProduct(handle: string): Promise<Product | undefined> {
-  const productData = await doApi(ApiRoutes.Product.replace('##partNumber##', handle));
+  const productData = await doApi(ApiRoutes.Product.replace('##partNumber##', handle), 'Product');
 
   const item = productData?.contents[0].items[0];
   const attributesOption: string[] = [];
@@ -730,7 +786,10 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
 }
 
 export async function getProductRecommendations(productId: string): Promise<Product[]> {
-  const productData = await doApi(ApiRoutes.Product.replace('##partNumber##', productId));
+  const productData = await doApi(
+    ApiRoutes.Product.replace('##partNumber##', productId),
+    'Product'
+  );
 
   const products: Product[] = [];
   const item = productData?.contents[0];
@@ -790,7 +849,8 @@ export async function getProducts({
   const orderBy = mapSort(sortKey || '', reverse || false);
 
   const productsData = await doApi(
-    ApiRoutes.ProductSearch.replace('##SEARCHTERM##', query || '') + orderBy
+    ApiRoutes.ProductSearch.replace('##SEARCHTERM##', query || '') + orderBy,
+    'ProductSearch'
   );
   const products: Product[] = [];
 

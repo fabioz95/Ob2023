@@ -35,6 +35,9 @@ export function AddToCart({
     ? 'Please select options'
     : undefined;
 
+  //const MOCK = 'TRUE';
+  const MOCK = 'FALSE';
+
   return (
     <button
       aria-label="Add item to cart"
@@ -54,16 +57,20 @@ export function AddToCart({
             )?.value || '';
         }
 
-        startTransition(async () => {
-          const error = await addItem(idVariant !== '' ? idVariant : id);
-          //selectedVariantId
-          if (error) {
-            alert(error);
-            return;
-          }
+        if (MOCK === 'TRUE') {
+          alert('addToCart in Mock');
+        } else {
+          startTransition(async () => {
+            const error = await addItem(idVariant !== '' ? idVariant : id);
+            //selectedVariantId
+            if (error) {
+              alert(error);
+              return;
+            }
 
-          router.refresh();
-        });
+            router.refresh();
+          });
+        }
       }}
       className={clsx(
         'relative flex w-full items-center justify-center rounded-full bg-blue-600 p-4 tracking-wide text-white hover:opacity-90',

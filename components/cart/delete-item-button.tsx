@@ -11,20 +11,27 @@ export default function DeleteItemButton({ item }: { item: CartItem }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
+  //const MOCK = 'TRUE';
+  const MOCK = 'FALSE';
+
   return (
     <button
       aria-label="Remove cart item"
       onClick={() => {
-        startTransition(async () => {
-          const error = await removeItem(item.id);
+        if (MOCK === 'TRUE') {
+          alert('deleteFromCart Mock');
+        } else {
+          startTransition(async () => {
+            const error = await removeItem(item.id);
 
-          if (error) {
-            alert(error);
-            return;
-          }
+            if (error) {
+              alert(error);
+              return;
+            }
 
-          router.refresh();
-        });
+            router.refresh();
+          });
+        }
       }}
       disabled={isPending}
       className={clsx(

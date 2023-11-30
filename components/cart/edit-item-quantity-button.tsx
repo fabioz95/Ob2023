@@ -17,24 +17,31 @@ export default function EditItemQuantityButton({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
+  //const MOCK = 'TRUE';
+  const MOCK = 'FALSE';
+
   return (
     <button
       aria-label={type === 'plus' ? 'Increase item quantity' : 'Reduce item quantity'}
       onClick={() => {
-        startTransition(async () => {
-          const quantity = type === 'plus' ? item.quantity * 1 + 1 : item.quantity * 1 - 1;
-          const error =
-            type === 'minus' && item.quantity - 1 === 0
-              ? await removeItem(item.id)
-              : await updateItemQuantity(item.id, quantity);
+        if (MOCK === 'TRUE') {
+          alert('updateFromCart mock');
+        } else {
+          startTransition(async () => {
+            const quantity = type === 'plus' ? item.quantity * 1 + 1 : item.quantity * 1 - 1;
+            const error =
+              type === 'minus' && item.quantity - 1 === 0
+                ? await removeItem(item.id)
+                : await updateItemQuantity(item.id, quantity);
 
-          if (error) {
-            alert(error);
-            return;
-          }
+            if (error) {
+              alert(error);
+              return;
+            }
 
-          router.refresh();
-        });
+            router.refresh();
+          });
+        }
       }}
       disabled={isPending}
       className={clsx(
