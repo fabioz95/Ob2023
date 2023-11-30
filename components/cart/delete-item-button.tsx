@@ -3,9 +3,9 @@ import LoadingDots from 'components/loading-dots';
 import { useRouter } from 'next/navigation';
 
 import clsx from 'clsx';
-import { removeItem } from 'components/cart/actions';
 import type { CartItem } from 'lib/shopify/types';
 import { useTransition } from 'react';
+import { removeItem } from './actions';
 
 export default function DeleteItemButton({ item }: { item: CartItem }) {
   const router = useRouter();

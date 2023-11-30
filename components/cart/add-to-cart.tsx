@@ -2,7 +2,7 @@
 
 import { PlusIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
-//import { addItem } from 'components/cart/actions';
+import { addItem } from 'components/cart/actions';
 import LoadingDots from 'components/loading-dots';
 import { ProductVariant } from 'lib/shopify/types';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,10 +10,14 @@ import { useTransition } from 'react';
 
 export function AddToCart({
   variants,
-  availableForSale
+  availableForSale,
+  partnumber,
+  id
 }: {
   variants: ProductVariant[];
   availableForSale: boolean;
+  partnumber: string;
+  id: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,18 +41,26 @@ export function AddToCart({
       //disabled={isPending || !availableForSale || !selectedVariantId}
       title={title}
       onClick={() => {
+        let idVariant = '';
         // Safeguard in case someone messes with `disabled` in devtools.
         //if (!availableForSale || !selectedVariantId) return;
+        console.log(variants);
+        console.log(partnumber);
+        console.log(id);
+        if (variants[0]) {
+          idVariant =
+            variants[0].selectedOptions.find(
+              (el: any) => variants[0] && el.name === searchParams.get(variants[0].id.toLowerCase())
+            )?.value || '';
+        }
 
         startTransition(async () => {
-          /*const error = await addItem(selectedVariantId);
-          
+          const error = await addItem(idVariant !== '' ? idVariant : id);
+          //selectedVariantId
           if (error) {
             alert(error);
             return;
           }
-          */
-          //fetch("https://jsonplaceholder.typicode.com/todos/1").then(res => res.json()).then(data => console.log(data));
 
           router.refresh();
         });

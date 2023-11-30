@@ -1,15 +1,10 @@
-import {
-  CAROUSEL,
-  SHOPIFY_GRAPHQL_API_ENDPOINT,
-  THREE_ITEM_GRID,
-  WCTOKEN,
-  WCTrustedToken
-} from 'lib/constants';
+import { CAROUSEL, THREE_ITEM_GRID, WCTOKEN, WCTrustedToken } from 'lib/constants';
 import { isShopifyError } from 'lib/type-guards';
 import {
+  addToCartMutation,
   createCartMutation,
-  editCartItemsMutation,
-  removeFromCartMutation
+  deleteCartMutation,
+  updateCartMutation
 } from './mutations/cart';
 import {} from './queries/collection';
 import { getPagesQuery } from './queries/page';
@@ -26,7 +21,6 @@ import {
   ShopifyCollection,
   ShopifyCreateCartOperation,
   ShopifyPagesOperation,
-  ShopifyRemoveFromCartOperation,
   ShopifyUpdateCartOperation
 } from './types';
 
@@ -34,8 +28,10 @@ import {
 
 import { ApiRoutes } from 'lib/url-mapper';
 
-const domain = `https://${process.env.SHOPIFY_STORE_DOMAIN!}`;
-const endpoint = `${domain}${SHOPIFY_GRAPHQL_API_ENDPOINT}`;
+//const domain = `https://${process.env.SHOPIFY_STORE_DOMAIN!}`;
+//const endpoint = `${domain}${SHOPIFY_GRAPHQL_API_ENDPOINT}`;
+//const endpoint = 'https://commerce-preview.sbx0133.play.hclsofy.com'
+const endpoint = 'https://commerce-preview-graphql.sbx0133.play.hclsofy.com/graphql?';
 const key = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN!;
 
 type ExtractVariables<T> = T extends { variables: object } ? T['variables'] : never;
@@ -68,7 +64,6 @@ export async function shopifyFetch<T>({
       cache,
       ...(tags && { next: { tags } })
     });
-
     const body = await result.json();
 
     if (body.errors) {
@@ -87,6 +82,59 @@ export async function shopifyFetch<T>({
         query
       };
     }
+
+    throw {
+      error: e,
+      query
+    };
+  }
+}
+
+export async function GraphQL<T>({
+  cache = 'force-cache',
+  headers,
+  query,
+  tags,
+  variables
+}: {
+  cache?: RequestCache;
+  headers?: HeadersInit;
+  query: string;
+  tags?: string[];
+  variables?: any;
+}): Promise<{ status: number; body: T } | never> {
+  try {
+    console.log('variables1: ', variables);
+    const result = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        wctoken: WCTOKEN,
+        wctrustedtoken: WCTrustedToken,
+        ...headers
+      },
+      body: JSON.stringify({
+        ...(query && { query }),
+        ...(variables && { variables })
+      }),
+      cache,
+      ...(tags && { next: { tags } })
+    });
+
+    console.log(result);
+
+    const body = await result.json();
+
+    if (body.errors) {
+      throw body.errors[0];
+    }
+
+    return {
+      status: result.status,
+      body
+    };
+  } catch (e) {
+    console.log(e);
 
     throw {
       error: e,
@@ -123,7 +171,7 @@ const guestIdentity = async () => {
 };
 
 const doApi = async (url: string) => {
-  console.log(url);
+  //console.log(url);
   const response = await fetch(url)
     .then((response) => response.json())
     .then((json) => {
@@ -139,7 +187,8 @@ const doApiHeader = async (url: string) => {
     headers: {
       wctoken: WCTOKEN,
       wctrustedtoken: WCTrustedToken
-    }
+    },
+    cache: 'no-cache'
   })
     .then((response) => response.json())
     .then((json) => {
@@ -183,138 +232,46 @@ export async function createCart(): Promise<Cart> {
   return reshapeCart(res.body.data.cartCreate.cart);
 }
 
-export async function addToCart(
-  cartId: string,
-  lines: { merchandiseId: string; quantity: number }[]
-): Promise<Cart> {
-  /*
-  const res = await shopifyFetch<ShopifyAddToCartOperation>({
+export async function addToCart(cartId: string, productId: string): Promise<Cart> {
+  const res = await GraphQL({
     query: addToCartMutation,
-    variables: {
-      cartId,
-      lines
-    },
+    variables: { productId },
     cache: 'no-store'
   });
-  return reshapeCart(res.body.data.cartLinesAdd.cart);
-  */
-  console.log(lines);
-  const cart: ShopifyCart = {
-    id: cartId,
-    checkoutUrl: 'checkout',
-    cost: {
-      subtotalAmount: { amount: '1', currencyCode: 'USD' },
-      totalAmount: { amount: '1', currencyCode: 'USD' },
-      totalTaxAmount: { amount: '1', currencyCode: 'USD' }
-    },
-    lines: {
-      edges: [
-        {
-          node: {
-            id: '1',
-            quantity: 1,
-            cost: {
-              totalAmount: { amount: '1', currencyCode: 'USD' }
-            },
-            merchandise: {
-              id: '1',
-              title: 'Merch 1',
-              selectedOptions: [
-                {
-                  name: 'Opt 1',
-                  value: 'Value option 1'
-                }
-              ],
-              product: {
-                id: '1',
-                handle: '1',
-                availableForSale: true,
-                title: 'First Product',
-                description: 'First Product Description',
-                descriptionHtml: 'First Product Description <b>In Bold </b>',
-                options: [],
-                priceRange: {
-                  maxVariantPrice: { amount: '1', currencyCode: 'USD' },
-                  minVariantPrice: { amount: '1', currencyCode: 'USD' }
-                },
-                featuredImage: {
-                  url: 'https://cdn.shopify.com/s/files/1/0754/3727/7491/files/t-shirt-1.png',
-                  altText: 'immagine alter text',
-                  width: 50,
-                  height: 50
-                },
-                seo: {
-                  title: 'Seo Product',
-                  description: 'Seo Product Description'
-                },
-                tags: [],
-                updatedAt: new Date().toISOString(),
-                variants: [
-                  {
-                    id: '1',
-                    title: 'Variants 1',
-                    availableForSale: true,
-                    selectedOptions: [
-                      {
-                        name: 'Opt 1',
-                        value: 'Value option 1'
-                      }
-                    ],
-                    price: { amount: '1', currencyCode: 'USD' }
-                  }
-                ],
-                images: [
-                  {
-                    url: 'https://cdn.shopify.com/s/files/1/0754/3727/7491/files/t-shirt-1.png',
-                    altText: 'immagine alter text',
-                    width: 50,
-                    height: 50
-                  },
-                  {
-                    url: 'https://cdn.shopify.com/s/files/1/0754/3727/7491/files/t-shirt-2.png',
-                    altText: 'immagine alter text',
-                    width: 50,
-                    height: 50
-                  }
-                ]
-              }
-            }
-          }
-        }
-      ]
-    },
-    totalQuantity: 1
-  };
-  return reshapeCart(cart);
+  console.log(res);
+
+  return getCart('1');
 }
 
-export async function removeFromCart(cartId: string, lineIds: string[]): Promise<Cart> {
-  const res = await shopifyFetch<ShopifyRemoveFromCartOperation>({
-    query: removeFromCartMutation,
+export async function removeFromCart(cartId: string, orderItemId: string): Promise<Cart> {
+  const res = await GraphQL({
+    query: deleteCartMutation,
     variables: {
-      cartId,
-      lineIds
+      orderItemId
     },
     cache: 'no-store'
   });
+  console.log(res);
 
-  return reshapeCart(res.body.data.cartLinesRemove.cart);
+  return getCart('1');
 }
 
 export async function updateCart(
   cartId: string,
-  lines: { id: string; merchandiseId: string; quantity: number }[]
+  orderItemId: string,
+  quantity: string
 ): Promise<Cart> {
-  const res = await shopifyFetch<ShopifyUpdateCartOperation>({
-    query: editCartItemsMutation,
+  const res = await GraphQL<ShopifyUpdateCartOperation>({
+    query: updateCartMutation,
     variables: {
-      cartId,
-      lines
+      orderItemId,
+      quantity
     },
     cache: 'no-store'
   });
+  console.log(res);
 
-  return reshapeCart(res.body.data.cartLinesUpdate.cart);
+  return getCart('1');
 }
 
 export async function getProductCart(element: any) {
@@ -326,7 +283,7 @@ export async function getProductCart(element: any) {
   const priceOffer = item.price.find((el: any) => el.usage === 'Offer');
 
   return {
-    id: element.productId,
+    id: element.orderItemId,
     quantity: element.quantity,
     cost: {
       totalAmount: { amount: element.orderItemPrice, currencyCode: element.currency }
@@ -336,7 +293,7 @@ export async function getProductCart(element: any) {
       title: '',
       selectedOptions: [],
       product: {
-        id: element.productId,
+        id: element.orderItemId,
         handle: element.productId,
         availableForSale: true,
         title: item.name,
@@ -373,14 +330,13 @@ export async function getProductCart(element: any) {
   };
 }
 
-export async function getCart(cartId: string): Promise<Cart | undefined> {
-  console.log('cartId: ' + cartId);
+export async function getCart(cartId: string): Promise<Cart> {
   const cart = await doApiHeader(ApiRoutes.Cart);
+  //console.log(cart);
 
   const product: CartItem[] = [];
-  //console.log(cart?.orderItem);
 
-  for (let i = 0; i < cart.orderItem.length; i++) {
+  for (let i = 0; i < cart?.orderItem?.length; i++) {
     const productData = await getProductCart(cart.orderItem[i]);
 
     product.push(productData);
@@ -388,125 +344,17 @@ export async function getCart(cartId: string): Promise<Cart | undefined> {
 
   const cartResp: Cart = {
     lines: product,
-    id: '1',
+    id: cartId,
     checkoutUrl: 'cart',
     cost: {
       subtotalAmount: { amount: cart?.grandTotal, currencyCode: cart?.grandTotalCurrency },
       totalAmount: { amount: cart?.grandTotal, currencyCode: cart?.grandTotalCurrency },
       totalTaxAmount: { amount: cart?.totalSalesTax, currencyCode: cart?.totalSalesTaxCurrency }
     },
-    totalQuantity: 1
+    totalQuantity: cart?.orderItem?.length
   };
 
   return cartResp;
-
-  //return reshapeCart(cartResp);
-
-  /*
-  console.log(cartId);
-  const cart: ShopifyCart = {
-    id: '1',
-    checkoutUrl: 'cart',
-    cost: {
-      subtotalAmount: { amount: '1', currencyCode: 'USD' },
-      totalAmount: { amount: '1', currencyCode: 'USD' },
-      totalTaxAmount: { amount: '1', currencyCode: 'USD' }
-    },
-    //lines: {edges: []},
-    lines: {
-      edges: [
-        {
-          node: {
-            id: '1',
-            quantity: 1,
-            cost: {
-              totalAmount: { amount: '1', currencyCode: 'USD' }
-            },
-            merchandise: {
-              id: '1',
-              title: 'Merch 1',
-              selectedOptions: [
-                {
-                  name: 'Opt 1',
-                  value: 'Value option 1'
-                }
-              ],
-              product: {
-                id: '1',
-                handle: '1',
-                availableForSale: true,
-                title: 'First Product',
-                description: 'First Product Description',
-                descriptionHtml: 'First Product Description <b>In Bold </b>',
-                options: [],
-                priceRange: {
-                  maxVariantPrice: { amount: '1', currencyCode: 'USD' },
-                  minVariantPrice: { amount: '1', currencyCode: 'USD' }
-                },
-                featuredImage: {
-                  url: 'https://cdn.shopify.com/s/files/1/0754/3727/7491/files/t-shirt-1.png',
-                  altText: 'immagine alter text',
-                  width: 50,
-                  height: 50
-                },
-                seo: {
-                  title: 'Seo Product',
-                  description: 'Seo Product Description'
-                },
-                tags: [],
-                updatedAt: new Date().toISOString(),
-                variants: [
-                  {
-                    id: '1',
-                    title: 'Variants 1',
-                    availableForSale: true,
-                    selectedOptions: [
-                      {
-                        name: 'Opt 1',
-                        value: 'Value option 1'
-                      }
-                    ],
-                    price: { amount: '1', currencyCode: 'USD' }
-                  }
-                ],
-                images: [
-                  {
-                    url: 'https://cdn.shopify.com/s/files/1/0754/3727/7491/files/t-shirt-1.png',
-                    altText: 'immagine alter text',
-                    width: 50,
-                    height: 50
-                  },
-                  {
-                    url: 'https://cdn.shopify.com/s/files/1/0754/3727/7491/files/t-shirt-2.png',
-                    altText: 'immagine alter text',
-                    width: 50,
-                    height: 50
-                  }
-                ]
-              }
-            }
-          }
-        }
-      ]
-    },
-    totalQuantity: 1
-  };
-
-  return reshapeCart(cart);
-  /*
-  const res = await shopifyFetch<ShopifyCartOperation>({
-    query: getCartQuery,
-    variables: { cartId },
-    cache: 'no-store'
-  });
-
-  // Old carts becomes `null` when you checkout.
-  if (!res.body.data.cart) {
-    return undefined;
-  }
-
-  return reshapeCart(res.body.data.cart);
-  */
 }
 
 export async function getCollection(handle: string): Promise<Collection | undefined> {
@@ -798,12 +646,22 @@ export async function getPages(): Promise<Page[]> {
 export async function getProduct(handle: string): Promise<Product | undefined> {
   const productData = await doApi(ApiRoutes.Product.replace('##partNumber##', handle));
 
-  const item = productData?.contents[0];
+  const item = productData?.contents[0].items[0];
   const attributesOption: string[] = [];
   const attributesVariant: any[] = [];
 
   const priceDisplay = item.price.find((el: any) => el.usage === 'Display');
   const priceOffer = item.price.find((el: any) => el.usage === 'Offer');
+
+  productData?.contents[0].items.map((el: any) => {
+    const color = el.attributes.find((attr: any) => attr.identifier === 'Color');
+
+    if (color && color.values && color.values[0]) {
+      attributesOption.push(color.values[0].value);
+      attributesVariant.push({ name: color.values[0].value, value: el.id });
+    }
+  });
+  /*
   const attributes = item.attributes.find((el: any) => el);
   attributes?.values.map((attr: any) => {
     attributesOption.push(attr.value);
@@ -811,6 +669,7 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
   attributes?.values.map((attr: any) => {
     attributesVariant.push({ name: attr.value, value: attr.value });
   });
+  */
 
   const product: Product = {
     id: item.id,
@@ -823,26 +682,28 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
       maxVariantPrice: { amount: priceDisplay.value, currencyCode: priceDisplay.currency },
       minVariantPrice: { amount: priceOffer.value, currencyCode: priceOffer.currency }
     },
-    options: attributes
-      ? [
-          {
-            id: attributes?.identifier,
-            name: attributes?.name,
-            values: attributesOption
-          }
-        ]
-      : [],
-    variants: attributes
-      ? [
-          {
-            id: attributes?.identifier,
-            title: attributes?.identifier,
-            availableForSale: true,
-            selectedOptions: attributesVariant,
-            price: { amount: priceDisplay.value, currencyCode: priceDisplay.currency }
-          }
-        ]
-      : [],
+    options:
+      productData?.contents[0].items.length > 1
+        ? [
+            {
+              id: 'Color',
+              name: 'Color',
+              values: attributesOption
+            }
+          ]
+        : [],
+    variants:
+      productData?.contents[0].items.length > 1
+        ? [
+            {
+              id: 'Color',
+              title: 'Color',
+              availableForSale: true,
+              selectedOptions: attributesVariant,
+              price: { amount: priceDisplay.value, currencyCode: priceDisplay.currency }
+            }
+          ]
+        : [],
     featuredImage: {
       url: ApiRoutes.ForImage + item.thumbnail,
       altText: 'immagine alter text',
@@ -879,7 +740,7 @@ export async function getProductRecommendations(productId: string): Promise<Prod
     const priceOffer = element.price.find((el: any) => el.usage === 'Offer');
 
     products.push({
-      id: element.id,
+      id: element.productIdd,
       handle: element.partNumber,
       availableForSale: element.buyable,
       title: element.name,

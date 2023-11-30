@@ -22,13 +22,14 @@ export const addItem = async (variantId: string | undefined): Promise<Error | un
     return new Error('Missing variantId');
   }
   try {
-    await addToCart(cartId, [{ merchandiseId: variantId, quantity: 1 }]);
+    console.log(variantId);
+    await addToCart(cartId, variantId);
   } catch (e) {
     return new Error('Error adding item', { cause: e });
   }
 };
 
-export const removeItem = async (lineId: string): Promise<Error | undefined> => {
+export const removeItem = async (orderItemId: string): Promise<Error | undefined> => {
   //const cartId = cookies().get('cartId')?.value;
   const cartId = '1';
 
@@ -36,21 +37,16 @@ export const removeItem = async (lineId: string): Promise<Error | undefined> => 
     return new Error('Missing cartId');
   }
   try {
-    await removeFromCart(cartId, [lineId]);
+    await removeFromCart(cartId, orderItemId);
   } catch (e) {
     return new Error('Error removing item', { cause: e });
   }
 };
 
-export const updateItemQuantity = async ({
-  lineId,
-  variantId,
-  quantity
-}: {
-  lineId: string;
-  variantId: string;
-  quantity: number;
-}): Promise<Error | undefined> => {
+export const updateItemQuantity = async (
+  orderItemId: string,
+  quantity: number
+): Promise<Error | undefined> => {
   //const cartId = cookies().get('cartId')?.value;
   const cartId = '1';
 
@@ -58,13 +54,7 @@ export const updateItemQuantity = async ({
     return new Error('Missing cartId');
   }
   try {
-    await updateCart(cartId, [
-      {
-        id: lineId,
-        merchandiseId: variantId,
-        quantity
-      }
-    ]);
+    await updateCart(cartId, orderItemId, quantity.toString());
   } catch (e) {
     return new Error('Error updating item quantity', { cause: e });
   }
