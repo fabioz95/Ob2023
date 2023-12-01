@@ -5,7 +5,7 @@ Obiettivo 2023 di Fabio Zuccaro utilizzo di vercel commerce per il solo obiettiv
 ## Spiegazione progetto (TODO)
 
 Il progetto consiste nel integrare un frontend creato da Vercel ["Vercel è una piattaforma per framework frontend e siti statici, costruita per integrarsi con il proprio contenuto headless, ecommerce o database."]
-Più precisamente "commerce: https://github.com/vercel/commerce/tree/v1
+Più precisamente "commerce: https://github.com/vercel/commerce/tree/v1"
 
 Questo progetto come si può notare è gestito tramite Next.js e la sua integrazione con Shopify.
 E' stato quindi svolto un lavoro per fare in modo di "staccare" questo progetto da shopify e renderlo indipendente, per poi andarlo a collegare con un BE di HCL Commerce tramite Sofy.
@@ -13,7 +13,7 @@ E' stato quindi svolto un lavoro per fare in modo di "staccare" questo progetto 
 ## Collegamento al BE (Sofy)
 
 E' stato creato un BE tramite Sofy, con il quale tramite swagger ed esempi di ecommerce (vedi: https://commerce-preview.sbx0133.play.hclsofy.com/Emerald/ o https://hclsofy.com/catalog/commerce-solutions?view=doc&file=all-in-one.md).
-Sono state gestite diverse chiamate più precisamente:
+Sono state gestite diverse chiamate, più precisamente:
 
 - Categories (Menu),
 - Products (Prodotti in base alla scelta del menu),
@@ -29,7 +29,10 @@ Questo token è possibile averlo tramite la chiamata guestIdentity(), per sempli
 Sono state utilizzate anche tre chiamate costruite tramite il linguaggio GraphQL, anche qui sembra basandoci sul medesimo BE tramtie Sofy (vedi: https://commerce-preview-graphql.sbx0133.play.hclsofy.com/graphql).
 
 Più precisamente le tre chiamate implementate sono state:
-AddToCart, RemoveFromCart, UpdateFromCart.
+
+- AddToCart
+- RemoveFromCart
+- UpdateFromCart
 
 ## Pagina Principale
 
@@ -39,7 +42,7 @@ Per gestire al menglio questo sono state create delle costanti (in futuro potreb
 
 ## Gestione prodotti e colori
 
-Per ogni prodotto se esistenti sono state inserite le varianti del colore. Quindi in base alla scelta selezioanta, il prodotto a carello sarà differente.
+Per ogni prodotto se esistenti sono state inserite le varianti del colore. Quindi in base alla scelta selezionata, il prodotto a carello sarà differente.
 
 ## MOCK
 
