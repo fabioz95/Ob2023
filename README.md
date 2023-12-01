@@ -4,9 +4,55 @@ Obiettivo 2023 di Fabio Zuccaro utilizzo di vercel commerce per il solo obiettiv
 
 ## Spiegazione progetto (TODO)
 
+Il progetto consiste nel integrare un frontend creato da Vercel ["Vercel è una piattaforma per framework frontend e siti statici, costruita per integrarsi con il proprio contenuto headless, ecommerce o database."]
+Più precisamente "commerce: https://github.com/vercel/commerce/tree/v1
+
+Questo progetto come si può notare è gestito tramite Next.js e la sua integrazione con Shopify.
+E' stato quindi svolto un lavoro per fare in modo di "staccare" questo progetto da shopify e renderlo indipendente, per poi andarlo a collegare con un BE di HCL Commerce tramite Sofy.
+
+## Collegamento al BE (Sofy)
+
+E' stato creato un BE tramite Sofy, con il quale tramite swagger ed esempi di ecommerce (vedi: https://commerce-preview.sbx0133.play.hclsofy.com/Emerald/ o https://hclsofy.com/catalog/commerce-solutions?view=doc&file=all-in-one.md).
+Sono state gestite diverse chiamate più precisamente:
+
+- Categories (Menu),
+- Products (Prodotti in base alla scelta del menu),
+- Product e ProductId(Singolo Prodotto),
+- ProductSearch (Ricerca di prodotti tramite Stringa),
+- Cart (Carrello)
+
+Per quanto riguarda il carello è stata fatta una chiamata a parte, perché questo necessita di due TOKEN per poterlo invocare.
+Questo token è possibile averlo tramite la chiamata guestIdentity(), per semplicità di questo progetto sono stati utilizzati due costanti inserite all'interno del progetto.
+
+## Collegamento al BE (Sofy con Graph)
+
+Sono state utilizzate anche tre chiamate costruite tramite il linguaggio GraphQL, anche qui sembra basandoci sul medesimo BE tramtie Sofy (vedi: https://commerce-preview-graphql.sbx0133.play.hclsofy.com/graphql).
+
+Più precisamente le tre chiamate implementate sono state:
+AddToCart, RemoveFromCart, UpdateFromCart.
+
+## Pagina Principale
+
+Nella homepage del sito, abbiamo utilizzato la stessa grafica esistente (3 Prodotti principali e un Carosello con diversi altri prodotti).
+Per gestire al menglio questo sono state create delle costanti (in futuro potrebbero essere espot o tanto altro), in cui l'utente può modificare i partNumber dei prodotti che vuole mostrare e questi si adatteranno.
+[THREE_ITEM_GRID e CAROUSEL] in lib-hcl\constants.ts
+
+## Gestione prodotti e colori
+
+Per ogni prodotto se esistenti sono state inserite le varianti del colore. Quindi in base alla scelta selezioanta, il prodotto a carello sarà differente.
+
 ## MOCK
 
-.env con MOCK=TRUE
+E' stata aggiunta una semplice gestione di Mock, per permettere di visualizzare il progetto senza un BE e di poter lavorare meglio ai vari problemi.
+E' stata aggiunta una variabile di configurazione nel file .env di nome MOCK, la quale può essere inizializzata a "TRUE", questo permetterà di avere le chiamate tramite dei mock creati nel file lib-hcl\hcl\mock-file.ts.
+E' anche possibile modificarlo e aggiungere altri mock (modificando la gestione).
+
+## FILE (PDF Study)
+
+Nella Cartella PDF Study sono presenti due file PDF, rispettivamente su:
+
+- Struttura Frontend: uno studio sui nuovi approcci frontend, clientside,serverside o un insieme dei due
+- GrapQL: una mini guida iniziale per l'utilizzo di GraphQL
 
 ## Running locally
 
