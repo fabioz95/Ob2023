@@ -21,8 +21,11 @@ Sono state gestite diverse chiamate, più precisamente:
 - ProductSearch (Ricerca di prodotti tramite Stringa),
 - Cart (Carrello)
 
-Per quanto riguarda il carello è stata fatta una chiamata a parte, perché questo necessita di due TOKEN per poterlo invocare.
-Questo token è possibile averlo tramite la chiamata guestIdentity(), per semplicità di questo progetto sono stati utilizzati due costanti inserite all'interno del progetto.
+Per la chiamata del Cart c'è stata una gestione diversa, perché questa necessita di due TOKEN per poterla invocare.
+E' stata molto complicata la gestione, perchè: per evitare l'errore dato dal CORS (non sono riuscito con delle estensioni ad evitarlo), ho utilizzato un proxy online che permette di superare il problema.
+Mentre per quanto riguarda i token, all'apertura della pagina viene controllata la sessione, se i token sono presenti (nel localStorage) utilizzerà quelli (così da avere il carello salvato da vecchie sessioni), in caso contrario verranno richiesti e salvati in sessione.
+
+Proprio per tutti questi motivi e in particolare per l'utilizzo della sessione lato browser, la chiamata del Cart e tutte le sue gestioni vengono effettuate lato client.
 
 ## Collegamento al BE (Sofy con Graph)
 
