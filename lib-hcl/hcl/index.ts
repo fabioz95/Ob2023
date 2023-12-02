@@ -1,11 +1,6 @@
 import { CAROUSEL, THREE_ITEM_GRID, WCTOKEN, WCTrustedToken } from 'lib-hcl/constants';
 import { isShopifyError } from 'lib-hcl/type-guards';
-import {
-  addToCartMutation,
-  createCartMutation,
-  deleteCartMutation,
-  updateCartMutation
-} from './mutations/cart';
+import { addToCartMutation, deleteCartMutation, updateCartMutation } from './mutations/cart';
 import {} from './queries/collection';
 import { getPagesQuery } from './queries/page';
 import {} from './queries/product';
@@ -17,9 +12,7 @@ import {
   Menu,
   Page,
   Product,
-  ShopifyCart,
   ShopifyCollection,
-  ShopifyCreateCartOperation,
   ShopifyPagesOperation,
   ShopifyUpdateCartOperation
 } from './types';
@@ -107,13 +100,17 @@ export async function GraphQL<T>({
   headers,
   query,
   tags,
-  variables
+  variables,
+  Wctoken,
+  Wctrustedtoken
 }: {
   cache?: RequestCache;
   headers?: HeadersInit;
   query: string;
   tags?: string[];
   variables?: any;
+  Wctoken?: string;
+  Wctrustedtoken?: string;
 }): Promise<{ status: number; body: T } | never> {
   try {
     console.log('variables1: ', variables);
@@ -121,8 +118,8 @@ export async function GraphQL<T>({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        wctoken: WCTOKEN,
-        wctrustedtoken: WCTrustedToken,
+        wctoken: Wctoken || WCTOKEN,
+        wctrustedtoken: Wctrustedtoken || WCTrustedToken,
         ...headers
       },
       body: JSON.stringify({
@@ -249,6 +246,7 @@ const doApiHeader = async (url: string, mockString: string) => {
   }
 };
 
+/*
 const reshapeCart = (cart: ShopifyCart): Cart => {
   if (!cart.cost?.totalTaxAmount) {
     cart.cost.totalTaxAmount = {
@@ -262,6 +260,7 @@ const reshapeCart = (cart: ShopifyCart): Cart => {
     lines: removeEdgesAndNodes(cart.lines)
   };
 };
+*/
 
 const reshapeCollection = (collection: ShopifyCollection): Collection | undefined => {
   if (!collection) {
@@ -274,6 +273,7 @@ const reshapeCollection = (collection: ShopifyCollection): Collection | undefine
   };
 };
 
+/*
 export async function createCart(): Promise<Cart> {
   const res = await shopifyFetch<ShopifyCreateCartOperation>({
     query: createCartMutation,
@@ -282,35 +282,66 @@ export async function createCart(): Promise<Cart> {
 
   return reshapeCart(res.body.data.cartCreate.cart);
 }
+*/
 
-export async function addToCart(cartId: string, productId: string): Promise<Cart> {
+const CartForReload = {
+  lines: [],
+  id: '1',
+  checkoutUrl: 'cart',
+  cost: {
+    subtotalAmount: { amount: '0', currencyCode: 'USD' },
+    totalAmount: { amount: '0', currencyCode: 'USD' },
+    totalTaxAmount: { amount: '0', currencyCode: 'USD' }
+  },
+  totalQuantity: Math.random()
+};
+
+export async function addToCart(
+  cartId: string,
+  productId: string,
+  Wctoken: string,
+  Wctrustedtoken: string
+): Promise<Cart> {
+  console.log(Wctoken);
+  console.log(Wctrustedtoken);
   const res = await GraphQL({
     query: addToCartMutation,
     variables: { productId },
-    cache: 'no-store'
+    cache: 'no-store',
+    Wctoken,
+    Wctrustedtoken
   });
   console.log(res);
 
-  return getCart('1');
+  return CartForReload;
 }
 
-export async function removeFromCart(cartId: string, orderItemId: string): Promise<Cart> {
+export async function removeFromCart(
+  cartId: string,
+  orderItemId: string,
+  Wctoken: string,
+  Wctrustedtoken: string
+): Promise<Cart> {
   const res = await GraphQL({
     query: deleteCartMutation,
     variables: {
       orderItemId
     },
-    cache: 'no-store'
+    cache: 'no-store',
+    Wctoken,
+    Wctrustedtoken
   });
   console.log(res);
 
-  return getCart('1');
+  return CartForReload;
 }
 
 export async function updateCart(
   cartId: string,
   orderItemId: string,
-  quantity: string
+  quantity: string,
+  Wctoken: string,
+  Wctrustedtoken: string
 ): Promise<Cart> {
   const res = await GraphQL<ShopifyUpdateCartOperation>({
     query: updateCartMutation,
@@ -318,11 +349,13 @@ export async function updateCart(
       orderItemId,
       quantity
     },
-    cache: 'no-store'
+    cache: 'no-store',
+    Wctoken,
+    Wctrustedtoken
   });
   console.log(res);
 
-  return getCart('1');
+  return CartForReload;
 }
 
 export async function getProductCart(element: any) {
@@ -386,6 +419,7 @@ export async function getProductCart(element: any) {
 
 export async function getCart(cartId: string): Promise<Cart> {
   const cart = await doApiHeader(ApiRoutes.Cart, 'Cart');
+  //const cart = await doApiHeader(ApiRoutes.CartProxy, 'Cart');
   //console.log(cart);
 
   const product: CartItem[] = [];

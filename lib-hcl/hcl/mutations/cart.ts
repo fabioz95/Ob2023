@@ -1,5 +1,3 @@
-import cartFragment from '../fragments/cart';
-
 export const addToCartMutation = /* GraphQL */ `
   mutation addToCart($productId: String!) {
     cartAddOrderItem(
@@ -46,9 +44,9 @@ export const addToCartMutation =
   }
   ${cartFragment}
 `;
-*/
 
-export const createCartMutation = /* GraphQL */ `
+
+export const createCartMutation =
   mutation createCart($lineItems: [CartLineInput!]) {
     cartCreate(input: { lines: $lineItems }) {
       cart {
@@ -59,7 +57,7 @@ export const createCartMutation = /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const editCartItemsMutation = /* GraphQL */ `
+export const editCartItemsMutation = 
   mutation editCartItems($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
@@ -70,7 +68,7 @@ export const editCartItemsMutation = /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const removeFromCartMutation = /* GraphQL */ `
+export const removeFromCartMutation =
   mutation removeFromCart($cartId: ID!, $lineIds: [ID!]!) {
     cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
       cart {
@@ -80,3 +78,4 @@ export const removeFromCartMutation = /* GraphQL */ `
   }
   ${cartFragment}
 `;
+*/

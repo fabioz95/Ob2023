@@ -9,34 +9,43 @@ import type { CartItem } from 'lib-hcl/hcl/types';
 
 export default function EditItemQuantityButton({
   item,
-  type
+  type,
+  Wctoken,
+  Wctrustedtoken,
+  setReload
 }: {
   item: CartItem;
   type: 'plus' | 'minus';
+  Wctoken: string;
+  Wctrustedtoken: string;
+  // eslint-disable-next-line no-unused-vars
+  setReload: (value: boolean) => void;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  //const MOCK = 'TRUE';
-  const MOCK = 'FALSE';
+  //const MOCK = true;
+  const MOCK = false;
 
   return (
     <button
       aria-label={type === 'plus' ? 'Increase item quantity' : 'Reduce item quantity'}
       onClick={() => {
-        if (MOCK === 'TRUE') {
+        if (MOCK) {
           alert('updateFromCart mock');
         } else {
           startTransition(async () => {
             const quantity = type === 'plus' ? item.quantity * 1 + 1 : item.quantity * 1 - 1;
             const error =
               type === 'minus' && item.quantity - 1 === 0
-                ? await removeItem(item.id)
-                : await updateItemQuantity(item.id, quantity);
+                ? await removeItem(item.id, Wctoken, Wctrustedtoken)
+                : await updateItemQuantity(item.id, quantity, Wctoken, Wctrustedtoken);
 
             if (error) {
               alert(error);
               return;
+            } else {
+              setReload(true);
             }
 
             router.refresh();

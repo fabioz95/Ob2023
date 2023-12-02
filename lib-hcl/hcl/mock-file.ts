@@ -1,3 +1,5 @@
+import { Cart } from './types';
+
 export const CategoriesMock = {
   contents: [
     {
@@ -10216,4 +10218,16 @@ export const ProductMock = {
     }
   ],
   total: 1
+};
+
+export const CartEmpty: Cart = {
+  lines: [],
+  id: '1',
+  checkoutUrl: 'cart',
+  cost: {
+    subtotalAmount: { amount: '0', currencyCode: 'USD' },
+    totalAmount: { amount: '0', currencyCode: 'USD' },
+    totalTaxAmount: { amount: '0', currencyCode: 'USD' }
+  },
+  totalQuantity: 0
 };

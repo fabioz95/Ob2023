@@ -7,26 +7,39 @@ import type { CartItem } from 'lib-hcl/hcl/types';
 import { useTransition } from 'react';
 import { removeItem } from './actions';
 
-export default function DeleteItemButton({ item }: { item: CartItem }) {
+export default function DeleteItemButton({
+  item,
+  Wctoken,
+  Wctrustedtoken,
+  setReload
+}: {
+  item: CartItem;
+  Wctoken: string;
+  Wctrustedtoken: string;
+  // eslint-disable-next-line no-unused-vars
+  setReload: (value: boolean) => void;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  //const MOCK = 'TRUE';
-  const MOCK = 'FALSE';
+  //const MOCK = true;
+  const MOCK = false;
 
   return (
     <button
       aria-label="Remove cart item"
       onClick={() => {
-        if (MOCK === 'TRUE') {
+        if (MOCK) {
           alert('deleteFromCart Mock');
         } else {
           startTransition(async () => {
-            const error = await removeItem(item.id);
+            const error = await removeItem(item.id, Wctoken, Wctrustedtoken);
 
             if (error) {
               alert(error);
               return;
+            } else {
+              setReload(true);
             }
 
             router.refresh();

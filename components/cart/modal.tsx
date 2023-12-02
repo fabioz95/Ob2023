@@ -4,7 +4,9 @@ import { Dialog, Transition } from '@headlessui/react';
 import { ShoppingCartIcon } from '@heroicons/react/24/outline';
 import Price from 'components/price';
 import { DEFAULT_OPTION } from 'lib-hcl/constants';
-import type { Cart } from 'lib-hcl/hcl/types';
+import { CartEmpty } from 'lib-hcl/hcl/mock-file';
+import type { Cart, CartItem } from 'lib-hcl/hcl/types';
+import { ApiRoutes } from 'lib-hcl/url-mapper';
 import { createUrl } from 'lib-hcl/utils';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -23,6 +25,171 @@ export default function CartModal({ cart }: { cart: Cart | undefined }) {
   const quantityRef = useRef(cart?.totalQuantity);
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
+  const [reload, setReload] = useState(true);
+  const [cartCorrect, setCartCorrect] = useState<Cart>();
+  const [wctoken, setWctoken] = useState('');
+  const [wctrustedtoken, setWctrustedtoken] = useState('');
+
+  const MOCK = false;
+
+  useEffect(() => {
+    setWctoken(window?.localStorage.getItem('WCToken') || '');
+    setWctrustedtoken(window?.localStorage.getItem('WCTrustedToken') || '');
+  }, []);
+
+  useEffect(() => {
+    console.log(cartCorrect);
+  }, [cartCorrect]);
+
+  useEffect(() => {
+    if (reload) {
+      if (MOCK) {
+        setCartCorrect(CartEmpty);
+      } else {
+        // declare the async data fetching function
+        const fetchData = async () => {
+          // get the data from the api
+
+          if (
+            window?.localStorage.getItem('WCToken') === null ||
+            window?.localStorage.getItem('WCTrustedToken') === null
+          ) {
+            await fetch(ApiRoutes.GuestIdentity, {
+              headers: {
+                accept: 'application/json, text/plain, */*',
+                'content-type': 'application/json',
+                'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"'
+              },
+              referrerPolicy: 'strict-origin-when-cross-origin',
+              body: '{}',
+              method: 'POST',
+              mode: 'cors',
+              credentials: 'omit'
+            })
+              .then((response) => response.json())
+              .then((json) => {
+                if (json.WCToken) {
+                  window.localStorage.setItem('WCToken', json.WCToken);
+                  window.localStorage.setItem('WCTrustedToken', json.WCTrustedToken);
+                }
+              });
+          }
+          const cart = await fetch(ApiRoutes.CartProxy, {
+            headers: {
+              wctoken: window.localStorage.getItem('WCToken') || '',
+              wctrustedtoken: window.localStorage.getItem('WCTrustedToken') || ''
+            },
+            cache: 'no-cache'
+          })
+            .then((response) => {
+              if (response.status === 404) throw '404';
+              else return response.json();
+            })
+            .then((json) => {
+              return json;
+            })
+            .catch(() => console.log('error'));
+
+          const product: CartItem[] = [];
+
+          for (let i = 0; i < cart?.orderItem?.length; i++) {
+            const productData = await fetch(
+              ApiRoutes.ProductId.replace('##productId##', cart.orderItem[i].productId)
+            )
+              .then((response) => response.json())
+              .then((json) => {
+                return json;
+              });
+
+            const item = productData?.contents[0];
+
+            const priceDisplay = item.price.find((el: any) => el.usage === 'Display');
+            const priceOffer = item.price.find((el: any) => el.usage === 'Offer');
+
+            product.push({
+              id: cart?.orderItem[i].orderItemId,
+              quantity: cart?.orderItem[i].quantity,
+              cost: {
+                totalAmount: {
+                  amount: cart?.orderItem[i].orderItemPrice,
+                  currencyCode: cart?.orderItem[i].currency
+                }
+              },
+              merchandise: {
+                id: '1',
+                title: '',
+                selectedOptions: [],
+                product: {
+                  id: cart?.orderItem[i].orderItemId,
+                  handle: cart?.orderItem[i].productId,
+                  availableForSale: true,
+                  title: item.name,
+                  description: item.shortDescription,
+                  descriptionHtml: item.shortDescription,
+                  options: [],
+                  priceRange: {
+                    maxVariantPrice: {
+                      amount: priceDisplay.value,
+                      currencyCode: priceDisplay.currency
+                    },
+                    minVariantPrice: { amount: priceOffer.value, currencyCode: priceOffer.currency }
+                  },
+                  featuredImage: {
+                    url: ApiRoutes.ForImage + item.thumbnail,
+                    altText: 'immagine alter text',
+                    width: 50,
+                    height: 50
+                  },
+                  images: [
+                    {
+                      url: ApiRoutes.ForImage + item.thumbnail,
+                      altText: 'Image alter text',
+                      width: 50,
+                      height: 50
+                    }
+                  ],
+                  seo: {
+                    title: item.name,
+                    description: item.shortDescription
+                  },
+                  tags: [],
+                  updatedAt: new Date().toISOString(),
+                  variants: []
+                }
+              }
+            });
+          }
+
+          const cartResp: Cart = {
+            lines: product,
+            id: '1',
+            checkoutUrl: 'cart',
+            cost: {
+              subtotalAmount: { amount: cart?.grandTotal, currencyCode: cart?.grandTotalCurrency },
+              totalAmount: { amount: cart?.grandTotal, currencyCode: cart?.grandTotalCurrency },
+              totalTaxAmount: {
+                amount: cart?.totalSalesTax,
+                currencyCode: cart?.totalSalesTaxCurrency
+              }
+            },
+            totalQuantity: cart?.orderItem?.length
+          };
+
+          // set state with the result
+          setCartCorrect(cartResp);
+        };
+
+        // call the function
+        fetchData()
+          // make sure to catch any error
+          .catch(console.error);
+
+        setReload(false);
+      }
+    }
+  }, [reload, MOCK]);
 
   useEffect(() => {
     // Open cart modal when quantity changes.
@@ -37,10 +204,16 @@ export default function CartModal({ cart }: { cart: Cart | undefined }) {
     }
   }, [isOpen, cart?.totalQuantity, quantityRef]);
 
+  const reloadCart = () => {
+    setReload(true);
+    setIsOpen(true);
+  };
+
   return (
     <>
+      <div id="reload-cart-to-add" style={{ display: 'none' }} onClick={() => reloadCart()} />
       <button aria-label="Open cart" onClick={openCart}>
-        <OpenCart quantity={cart?.totalQuantity} />
+        <OpenCart quantity={cartCorrect?.totalQuantity} />
       </button>
       <Transition show={isOpen}>
         <Dialog onClose={closeCart} className="relative z-50">
@@ -73,7 +246,7 @@ export default function CartModal({ cart }: { cart: Cart | undefined }) {
                 </button>
               </div>
 
-              {!cart || cart.lines.length === 0 ? (
+              {!cartCorrect || cartCorrect.lines.length === 0 ? (
                 <div className="mt-20 flex w-full flex-col items-center justify-center overflow-hidden">
                   <ShoppingCartIcon className="h-16" />
                   <p className="mt-6 text-center text-2xl font-bold">Your cart is empty.</p>
@@ -81,17 +254,17 @@ export default function CartModal({ cart }: { cart: Cart | undefined }) {
               ) : (
                 <div className="flex h-full flex-col justify-between overflow-hidden p-1">
                   <ul className="flex-grow overflow-auto py-4">
-                    {cart.lines.map((item, i) => {
+                    {cartCorrect.lines.map((item, i) => {
                       const merchandiseSearchParams = {} as MerchandiseSearchParams;
 
-                      item.merchandise.selectedOptions.forEach(({ name, value }) => {
+                      item?.merchandise?.selectedOptions?.forEach(({ name, value }) => {
                         if (value !== DEFAULT_OPTION) {
                           merchandiseSearchParams[name.toLowerCase()] = value;
                         }
                       });
 
                       const merchandiseUrl = createUrl(
-                        `/product/${item.merchandise.product.handle}`,
+                        `/product/${item?.merchandise?.product?.handle}`,
                         new URLSearchParams(merchandiseSearchParams)
                       );
 
@@ -102,7 +275,12 @@ export default function CartModal({ cart }: { cart: Cart | undefined }) {
                         >
                           <div className="relative flex w-full flex-row justify-between px-1 py-4">
                             <div className="absolute z-40 -mt-2 ml-[55px]">
-                              <DeleteItemButton item={item} />
+                              <DeleteItemButton
+                                item={item}
+                                Wctoken={wctoken}
+                                Wctrustedtoken={wctrustedtoken}
+                                setReload={(value: boolean) => setReload(value)}
+                              />
                             </div>
                             <Link
                               href={merchandiseUrl}
@@ -115,20 +293,20 @@ export default function CartModal({ cart }: { cart: Cart | undefined }) {
                                   width={64}
                                   height={64}
                                   alt={
-                                    item.merchandise.product.featuredImage.altText ||
-                                    item.merchandise.product.title
+                                    item?.merchandise?.product?.featuredImage?.altText ||
+                                    item?.merchandise?.product?.title
                                   }
-                                  src={item.merchandise.product.featuredImage.url}
+                                  src={item?.merchandise?.product?.featuredImage?.url}
                                 />
                               </div>
 
                               <div className="flex flex-1 flex-col text-base">
                                 <span className="leading-tight">
-                                  {item.merchandise.product.title}
+                                  {item?.merchandise?.product?.title}
                                 </span>
-                                {item.merchandise.title !== DEFAULT_OPTION ? (
+                                {item?.merchandise?.title !== DEFAULT_OPTION ? (
                                   <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                    {item.merchandise.title}
+                                    {item?.merchandise?.title}
                                   </p>
                                 ) : null}
                               </div>
@@ -136,15 +314,27 @@ export default function CartModal({ cart }: { cart: Cart | undefined }) {
                             <div className="flex h-16 flex-col justify-between">
                               <Price
                                 className="flex justify-end space-y-2 text-right text-sm"
-                                amount={item.cost.totalAmount.amount}
-                                currencyCode={item.cost.totalAmount.currencyCode}
+                                amount={item?.cost?.totalAmount?.amount}
+                                currencyCode={item?.cost?.totalAmount?.currencyCode}
                               />
                               <div className="ml-auto flex h-9 flex-row items-center rounded-full border border-neutral-200 dark:border-neutral-700">
-                                <EditItemQuantityButton item={item} type="minus" />
+                                <EditItemQuantityButton
+                                  item={item}
+                                  type="minus"
+                                  Wctoken={wctoken}
+                                  Wctrustedtoken={wctrustedtoken}
+                                  setReload={(value: boolean) => setReload(value)}
+                                />
                                 <p className="w-6 text-center ">
-                                  <span className="w-full text-sm">{item.quantity}</span>
+                                  <span className="w-full text-sm">{item?.quantity}</span>
                                 </p>
-                                <EditItemQuantityButton item={item} type="plus" />
+                                <EditItemQuantityButton
+                                  item={item}
+                                  type="plus"
+                                  Wctoken={wctoken}
+                                  Wctrustedtoken={wctrustedtoken}
+                                  setReload={(value: boolean) => setReload(value)}
+                                />
                               </div>
                             </div>
                           </div>
@@ -157,8 +347,8 @@ export default function CartModal({ cart }: { cart: Cart | undefined }) {
                       <p>Taxes</p>
                       <Price
                         className="text-right text-base text-black dark:text-white"
-                        amount={cart.cost.totalTaxAmount.amount}
-                        currencyCode={cart.cost.totalTaxAmount.currencyCode}
+                        amount={cartCorrect?.cost?.totalTaxAmount?.amount}
+                        currencyCode={cartCorrect?.cost?.totalTaxAmount?.currencyCode}
                       />
                     </div>
                     <div className="mb-3 flex items-center justify-between border-b border-neutral-200 pb-1 pt-1 dark:border-neutral-700">
@@ -169,13 +359,13 @@ export default function CartModal({ cart }: { cart: Cart | undefined }) {
                       <p>Total</p>
                       <Price
                         className="text-right text-base text-black dark:text-white"
-                        amount={cart.cost.totalAmount.amount}
-                        currencyCode={cart.cost.totalAmount.currencyCode}
+                        amount={cartCorrect.cost.totalAmount.amount}
+                        currencyCode={cartCorrect.cost.totalAmount.currencyCode}
                       />
                     </div>
                   </div>
                   <a
-                    href={cart.checkoutUrl}
+                    href={cartCorrect.checkoutUrl}
                     className="block w-full rounded-full bg-blue-600 p-3 text-center text-sm font-medium text-white opacity-90 hover:opacity-100"
                   >
                     Proceed to Checkout

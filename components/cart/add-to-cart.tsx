@@ -2,11 +2,11 @@
 
 import { PlusIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
-import { addItem } from 'components/cart/actions';
 import LoadingDots from 'components/loading-dots';
 import { ProductVariant } from 'lib-hcl/hcl/types';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
+import { addItem } from './actions';
 
 export function AddToCart({
   variants,
@@ -35,8 +35,8 @@ export function AddToCart({
     ? 'Please select options'
     : undefined;
 
-  //const MOCK = 'TRUE';
-  const MOCK = 'FALSE';
+  //const MOCK = true;
+  const MOCK = false;
 
   return (
     <button
@@ -57,15 +57,19 @@ export function AddToCart({
             )?.value || '';
         }
 
-        if (MOCK === 'TRUE') {
+        if (MOCK) {
           alert('addToCart in Mock');
         } else {
           startTransition(async () => {
-            const error = await addItem(idVariant !== '' ? idVariant : id);
+            const wct = window.localStorage.getItem('WCToken');
+            const wctru = window.localStorage.getItem('WCTrustedToken');
+            const error = await addItem(idVariant !== '' ? idVariant : id, wct || '', wctru || '');
             //selectedVariantId
             if (error) {
               alert(error);
               return;
+            } else {
+              document.getElementById('reload-cart-to-add')?.click();
             }
 
             router.refresh();

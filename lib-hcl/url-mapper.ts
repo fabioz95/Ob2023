@@ -7,7 +7,8 @@ export enum ApiRoutes {
   ProductThree = 'https://commerce-preview.sbx0133.play.hclsofy.com/search/resources/api/v2/products?storeId=11&partNumber=##partNumber1##&partNumber=##partNumber2##&partNumber=##partNumber3##&catalogId=11501&contractId=-11005&langId=-1',
   ProductCarousel = 'https://commerce-preview.sbx0133.play.hclsofy.com/search/resources/api/v2/products?storeId=11&catalogId=11501&contractId=-11005&langId=-1',
   ProductSearch = 'https://commerce-preview.sbx0133.play.hclsofy.com/search/resources/api/v2/products?storeId=11&limit=12&offset=0&contractId=-11005&currency=USD&langId=-1&profileName=HCL_V2_findProductsBySearchTermWithPrice&searchTerm=##SEARCHTERM##',
-  Cart = 'https://commerce-preview.sbx0133.play.hclsofy.com/wcs/resources/store/11/cart/@self?langId=-1&currency=USD&sortOrderItemBy=orderItemID',
+  Cart = 'http://commerce-preview.sbx0133.play.hclsofy.com/wcs/resources/store/11/cart/@self?langId=-1&currency=USD&sortOrderItemBy=orderItemID',
+  CartProxy = 'https://corsproxy.io/?http://commerce-preview.sbx0133.play.hclsofy.com/wcs/resources/store/11/cart/@self?langId=-1&currency=USD&sortOrderItemBy=orderItemID',
   GuestIdentity = 'https://commerce-preview.sbx0133.play.hclsofy.com/wcs/resources/store/11/guestidentity?langId=-1',
   ProductId = 'https://commerce-preview.sbx0133.play.hclsofy.com/search/resources/api/v2/products?storeId=11&id=##productId##&catalogId=11501&contractId=-11005&langId=-1'
 }
